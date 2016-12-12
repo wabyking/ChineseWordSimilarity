@@ -37,9 +37,9 @@ def loadEmbedding():
 	
 	train,test=loadData()
 	words=set(train["word1"])|set(train["word2"]) |set(test["word1"]) |set(test["word2"])
-	if not os.path.exists(user_dict):
-		with open(user_dict,"w") as f:
-			f.write("\n".join(words))
+	# if not os.path.exists(user_dict):
+	# 	with open(user_dict,"w") as f:
+	# 		f.write("\n".join(words))
 
 	w2v=gensim.models.word2vec.Word2Vec.load_word2vec_format(embedding_file, binary=False )
 	embeddings=dict()
@@ -55,7 +55,6 @@ def overlap(row):
 
 embeddings=loadEmbedding()
 def embedding_sim(row):
-
 	
 	word1,word2=row["word1"],row["word2"]
 	if word1 in embeddings.keys() and word2 in embeddings.keys():
@@ -63,13 +62,8 @@ def embedding_sim(row):
 		v2= embeddings[word2]
 		score=np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
 		return score
-	print word1,word2,row["score"]
-	return 0.8
-
-	# if re.search('^[a-zA-Z]+$', word1) or re.search('^[a-zA-Z]+$', word1):
-	# 	return 0.8
-	
-	# return 
+	# print word1,word2,row["score"]
+	return 0.8           # 这个影响了结果，其实应该会
 
 def main():
 	train,test=loadData()
@@ -77,41 +71,26 @@ def main():
 	test["overlap"]=test.apply(overlap,axis=1)
 	test["w2v"]=test.apply( embedding_sim  ,axis=1)
 
-	# # print len(test[test.predicted==0.8])
-	# test[""]=test["predicted"].fillna(test["predicted"].mean())
+	# print len(test[test.predicted==0.8])
+	test["w2v"]=test["w2v"].fillna(test["w2v"].mean())
 
-	# test["predicted"]=test.apply( lambda row: cs.similarity(row["word1"],row["word2"])  ,axis=1)
-	# test["predicted"]=test.apply( lambda row: cs.sim2013(row["word1"],row["word2"])  ,axis=1)
+	# test["cilin"]=test.apply( lambda row: cs.similarity(row["word1"],row["word2"])  ,axis=1)
+	# test["cilin"]=test.apply( lambda row: cs.sim2013(row["word1"],row["word2"])  ,axis=1)
 	test["cilin"]=test.apply( lambda row: cs.sim2016(row["word1"].decode("utf-8"),row["word2"].decode("utf-8"))  ,axis=1)
 	# for i in np.linspace(1,10,30):
-	test["predicted"]=test["cilin"]+ test["w2v"] +  0.2*(test["overlap"]>0 )                                   #0.5520 ,0.5272
+	test["predicted"]=test["cilin"]+ 1.7*test["w2v"]                                   #0.5607 ,0.5418
+	test["predicted"]=test["cilin"]+ test["w2v"]                                      #0.5520 ,0.5272
 	# test["predicted"]=test.apply(lambda row: max(row["cilin"],row["w2v"])  ,axis=1)  #0.5617 ,0.5388
 	# test["predicted"]=test.apply(lambda row: min(row["cilin"],row["w2v"])  ,axis=1)  #0.4352   0.4137
 	# test["predicted"]=test.apply(lambda row: math.sqrt(row["cilin"]*row["w2v"])  ,axis=1)  #0.4538   0.4589
-	# print test
+	
 	print stats.pearsonr(test["score"],test["predicted"])
 	print stats.spearmanr(test["score"],test["predicted"])
 	# print np.corrcoef(test["score"],test["predicted"])
-	
-
-def loadEnglish():
-	w2v=gensim.models.word2vec.Word2Vec.load_word2vec_format(embedding_file, binary=False )
-	words=[]
-	for word in w2v.vocab.keys():
-		if re.search('^[a-zA-Z]+$', word):
-			words.append(word)
-
-	with open("words_eng","w") as f:
-		f.write("\n".join(words))
-
-
 
 if __name__ == '__main__':
 	# main()
 	main()
-	# w1,w2=u'抄袭',u'克隆'
-	# code1 = cs.get_code(w1)
-	# code1 = cs.get_code(w2)
-	# print cs.similarity(w1,w2)
+
 	
 	
