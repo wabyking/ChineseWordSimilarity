@@ -1,4 +1,4 @@
-The main idea drives from the following paper. When you user this code, please cite these paper:
+The main idea drives from the following paper. When you use this code, please cite this paper:
 
 @inproceedings{pei2016combining,
   title={Combining word embedding and semantic lexicon for Chinese word similarity computation},
